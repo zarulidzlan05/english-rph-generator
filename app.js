@@ -1,6 +1,6 @@
-const STORAGE_KEY = "my_rph_classes";
+const STORAGE_KEY = "my_rph_ipg_classes";
 
-const DSKP_DATA = {
+const DSKP_DATABASE = {
   Listening: {
     CS: "1.2 Understand meaning in a variety of familiar contexts.",
     LS: {
@@ -62,12 +62,17 @@ let savedClasses = [];
 
 document.addEventListener("DOMContentLoaded", () => {
   loadClasses();
-  updateDSKPOptions();
+  initSkillDropdowns();
+  // Set default today's date
+  document.getElementById("lessonDate").valueToDate = new Date();
+  document.getElementById("lessonDate").value = new Date().toISOString().substring(0, 10);
 });
 
 function loadClasses() {
   const data = localStorage.getItem(STORAGE_KEY);
-  savedClasses = data ? JSON.parse(data) : [];
+  savedClasses = data ? JSON.parse(data) : [
+    { id: "1", className: "3 Arif", year: "3", quantity: "26" }
+  ];
   renderClassList();
   renderClassDropdown();
 }
@@ -79,21 +84,15 @@ function saveClassesToStorage() {
 function renderClassList() {
   const tbody = document.getElementById("classListTable");
   tbody.innerHTML = "";
-
-  if (savedClasses.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No classes saved yet. Add one!</td></tr>`;
-    return;
-  }
-
   savedClasses.forEach((cls) => {
     tbody.innerHTML += `
       <tr>
         <td><strong>${cls.className}</strong></td>
         <td>Year ${cls.year}</td>
         <td>${cls.quantity}</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary me-1" onclick="editClass('${cls.id}')">Edit</button>
-          <button class="btn btn-sm btn-outline-danger" onclick="deleteClass('${cls.id}')">Delete</button>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-primary me-1" onclick="editClass('${cls.id}')"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteClass('${cls.id}')"><i class="bi bi-trash"></i></button>
         </td>
       </tr>
     `;
@@ -104,7 +103,7 @@ function renderClassDropdown() {
   const select = document.getElementById("selectSavedClass");
   select.innerHTML = `<option value="">-- Select Saved Class --</option>`;
   savedClasses.forEach((cls) => {
-    select.innerHTML += `<option value="${cls.id}">${cls.className} (Year ${cls.year})</option>`;
+    select.innerHTML += `<option value="${cls.id}">${cls.className} (Year ${cls.year} - ${cls.quantity} pupils)</option>`;
   });
 }
 
@@ -117,12 +116,9 @@ document.getElementById("classForm").addEventListener("submit", (e) => {
 
   if (id) {
     const index = savedClasses.findIndex((c) => c.id === id);
-    if (index !== -1) {
-      savedClasses[index] = { id, className, year, quantity };
-    }
+    if (index !== -1) savedClasses[index] = { id, className, year, quantity };
   } else {
-    const newClass = { id: Date.now().toString(), className, year, quantity };
-    savedClasses.push(newClass);
+    savedClasses.push({ id: Date.now().toString(), className, year, quantity });
   }
 
   saveClassesToStorage();
@@ -133,13 +129,11 @@ document.getElementById("classForm").addEventListener("submit", (e) => {
 function editClass(id) {
   const cls = savedClasses.find((c) => c.id === id);
   if (!cls) return;
-
   document.getElementById("classId").value = cls.id;
   document.getElementById("classNameInput").value = cls.className;
   document.getElementById("classYearInput").value = cls.year;
   document.getElementById("classQuantityInput").value = cls.quantity;
-
-  document.getElementById("classFormTitle").innerText = "Edit Class";
+  document.getElementById("classFormTitle").innerText = "Edit Class Profile";
   document.getElementById("saveClassBtn").innerText = "Update Class";
   document.getElementById("cancelEditBtn").classList.remove("d-none");
 }
@@ -155,96 +149,152 @@ function deleteClass(id) {
 function resetClassForm() {
   document.getElementById("classId").value = "";
   document.getElementById("classForm").reset();
-  document.getElementById("classFormTitle").innerText = "Add New Class";
+  document.getElementById("classFormTitle").innerText = "Add New Class Profile";
   document.getElementById("saveClassBtn").innerText = "Save Class";
   document.getElementById("cancelEditBtn").classList.add("d-none");
 }
 
-function onClassSelect() {
-  const selectedId = document.getElementById("selectSavedClass").value;
-  if (!selectedId) return;
+function initSkillDropdowns() {
+  const mainSelect = document.getElementById("mainSkillSelect");
+  const compSelect = document.getElementById("compSkillSelect");
+  
+  mainSelect.innerHTML = "";
+  compSelect.innerHTML = "";
 
-  const cls = savedClasses.find((c) => c.id === selectedId);
-  if (cls) {
-    updateDSKPOptions();
-  }
+  Object.keys(DSKP_DATABASE).forEach((skill) => {
+    mainSelect.innerHTML += `<option value="${skill}">${skill}</option>`;
+    compSelect.innerHTML += `<option value="${skill}">${skill}</option>`;
+  });
+
+  mainSelect.value = "Listening";
+  compSelect.value = "Speaking";
+  updateDSKP();
 }
 
-function updateDSKPOptions() {
-  const selectedClassId = document.getElementById("selectSavedClass").value;
-  const selectedSkill = document.getElementById("mainSkillSelect").value;
-  const csSelect = document.getElementById("csSelect");
-  const lsSelect = document.getElementById("lsSelect");
+function onClassSelect() {
+  updateDSKP();
+  generateRPH();
+}
 
-  let currentYear = "1";
+function updateDSKP() {
+  const selectedClassId = document.getElementById("selectSavedClass").value;
+  let year = "1";
   if (selectedClassId) {
     const cls = savedClasses.find((c) => c.id === selectedClassId);
-    if (cls) currentYear = cls.year;
+    if (cls) year = cls.year;
   }
 
-  const skillData = DSKP_DATA[selectedSkill];
+  const mainSkill = document.getElementById("mainSkillSelect").value;
+  const compSkill = document.getElementById("compSkillSelect").value;
 
-  csSelect.innerHTML = `<option value="${skillData.CS}">${skillData.CS}</option>`;
-  lsSelect.innerHTML = `<option value="${skillData.LS[currentYear]}">${skillData.LS[currentYear]}</option>`;
+  document.getElementById("mainCS").value = DSKP_DATABASE[mainSkill].CS;
+  document.getElementById("mainLS").value = DSKP_DATABASE[mainSkill].LS[year];
+
+  document.getElementById("compCS").value = DSKP_DATABASE[compSkill].CS;
+  document.getElementById("compLS").value = DSKP_DATABASE[compSkill].LS[year];
 }
 
 function generateRPH() {
-  const teacher = document.getElementById("teacherName").value || "Cikgu Name";
   const selectedClassId = document.getElementById("selectSavedClass").value;
+  let className = "3 Arif";
+  let year = "1";
+  let quantity = "26";
 
-  if (!selectedClassId) {
-    alert("Please select a saved class first!");
-    return;
+  if (selectedClassId) {
+    const cls = savedClasses.find((c) => c.id === selectedClassId);
+    if (cls) {
+      className = cls.className;
+      year = cls.year;
+      quantity = cls.quantity;
+    }
   }
 
-  const cls = savedClasses.find((c) => c.id === selectedClassId);
-  const date = document.getElementById("lessonDate").value;
-  const day = document.getElementById("lessonDay").value;
-  const time = document.getElementById("lessonTime").value || "08:00 - 09:00 AM";
-  const topic = document.getElementById("lessonTopic").value || "World of Knowledge";
+  // Bind Admin Fields
+  document.getElementById("pYear").innerText = year;
+  document.getElementById("pNumStudents").innerText = quantity;
+  document.getElementById("pDate").innerText = document.getElementById("lessonDate").value || "-";
+  document.getElementById("pTime").innerText = document.getElementById("lessonTime").value || "-";
+  document.getElementById("pThemeTopic").innerText = document.getElementById("lessonThemeTopic").value || "-";
+  document.getElementById("pSkillFocus").innerText = document.getElementById("lessonSkillFocus").value || "-";
+  document.getElementById("pPriorKnowledge").innerText = document.getElementById("priorKnowledge").value || "-";
 
-  const skill = document.getElementById("mainSkillSelect").value;
-  const cs = document.getElementById("csSelect").value;
-  const ls = document.getElementById("lsSelect").value;
+  // Bind DSKP
+  document.getElementById("pMainSkillTitle").innerText = document.getElementById("mainSkillSelect").value;
+  document.getElementById("pCompSkillTitle").innerText = document.getElementById("compSkillSelect").value;
+  document.getElementById("pMainCS").innerText = document.getElementById("mainCS").value;
+  document.getElementById("pMainLS").innerText = document.getElementById("mainLS").value;
+  document.getElementById("pCompCS").innerText = document.getElementById("compCS").value;
+  document.getElementById("pCompLS").innerText = document.getElementById("compLS").value;
+
+  // Bind LO
+  document.getElementById("pLoKnowledge").innerText = document.getElementById("loKnowledge").value || "-";
+  document.getElementById("pLoSkill").innerText = document.getElementById("loSkill").value || "-";
+  document.getElementById("pLoValue").innerText = document.getElementById("loValue").value || "-";
+
+  // STRICT OBJECTIVE AUDIENCE HEADER
+  document.getElementById("pObjHeader").innerText = `By the end of the lesson, ${className} pupils should be able to:`;
 
   const bcd1 = document.getElementById("bcd1").value;
   const bcd2 = document.getElementById("bcd2").value;
-  const criteria = document.getElementById("successCriteria").value;
-
-  const starter = document.getElementById("actStarter").value;
-  const main = document.getElementById("actMain").value;
-  const plenary = document.getElementById("actPlenary").value;
-
-  const emk = document.getElementById("emkInput").value;
-  const bbb = document.getElementById("bbbInput").value;
-
-  document.getElementById("previewTeacher").innerText = teacher;
-  document.getElementById("previewClass").innerText = cls.className;
-  document.getElementById("previewQuantity").innerText = `${cls.quantity} pupils`;
-  document.getElementById("previewDateDay").innerText = `${date} (${day})`;
-  document.getElementById("previewTime").innerText = time;
-  document.getElementById("previewTopic").innerText = topic;
-
-  document.getElementById("previewSkill").innerText = skill;
-  document.getElementById("previewCS").innerText = cs;
-  document.getElementById("previewLS").innerText = ls;
-
-  // STRICT OBJECTIVE FORMAT: "By the end of the lesson, [Class Name] pupils should be able to:"
-  document.getElementById("previewAudienceHeader").innerText = `By the end of the lesson, ${cls.className} pupils should be able to:`;
-
-  const objList = document.getElementById("previewObjectivesList");
+  const objList = document.getElementById("pObjList");
   objList.innerHTML = `<li>${bcd1}</li>`;
-  if (bcd2.trim() !== "") {
-    objList.innerHTML += `<li>${bcd2}</li>`;
-  }
+  if (bcd2.trim() !== "") objList.innerHTML += `<li>${bcd2}</li>`;
 
-  document.getElementById("previewCriteria").innerText = criteria || "-";
-  document.getElementById("previewStarter").innerText = starter;
-  document.getElementById("previewMain").innerText = main;
-  document.getElementById("previewPlenary").innerText = plenary;
+  // Success Criteria
+  const sc1 = document.getElementById("sc1").value;
+  const sc2 = document.getElementById("sc2").value;
+  const sc3 = document.getElementById("sc3").value;
+  const sc4 = document.getElementById("sc4").value;
+  let scHtml = "";
+  if (sc1) scHtml += `<div>${sc1}</div>`;
+  if (sc2) scHtml += `<div>${sc2}</div>`;
+  if (sc3) scHtml += `<div>${sc3}</div>`;
+  if (sc4) scHtml += `<div>${sc4}</div>`;
+  document.getElementById("pScList").innerHTML = scHtml || "1. Complete assigned worksheet task.";
 
-  document.getElementById("previewEMK").innerText = emk;
-  document.getElementById("previewBBB").innerText = bbb;
+  // CBA
+  document.getElementById("pCbaOral").innerText = document.getElementById("cbaOral").checked ? "√" : "";
+  document.getElementById("pCbaObs").innerText = document.getElementById("cbaObs").checked ? "√" : "";
+  document.getElementById("pCbaWritten").innerText = document.getElementById("cbaWritten").checked ? "√" : "";
+  document.getElementById("pCbaInst").innerText = document.getElementById("cbaInstruments").value || "-";
 
-  document.getElementById("previewReflection").innerText = `___ / ${cls.quantity} pupils achieved the learning objectives. Remedial activity was given to pupils who needed guidance.`;
+  // Elements
+  document.getElementById("pTS").innerText = document.getElementById("elemTS").value || "-";
+  document.getElementById("pCCE").innerText = document.getElementById("elemCCE").value || "-";
+  document.getElementById("pICT").innerText = document.getElementById("elemICT").value || "-";
+  document.getElementById("pTLM").innerText = document.getElementById("elemTLM").value || "-";
+  document.getElementById("pAED").innerText = document.getElementById("elemAED").value || "-";
+  document.getElementById("pSS").innerText = document.getElementById("elemSS").value || "-";
+  document.getElementById("p21CPP").innerText = document.getElementById("elem21CPP").value || "-";
+  document.getElementById("pDS").innerText = document.getElementById("elemDS").value || "-";
+
+  // Stages
+  document.getElementById("pPreContent").innerText = document.getElementById("preContent").value;
+  document.getElementById("pPreAct").innerText = document.getElementById("preAct").value;
+
+  document.getElementById("pStg1Content").innerText = document.getElementById("stg1Content").value;
+  document.getElementById("pStg1Act").innerText = document.getElementById("stg1Act").value;
+
+  document.getElementById("pStg2Content").innerText = document.getElementById("stg2Content").value;
+  document.getElementById("pStg2Act").innerText = document.getElementById("stg2Act").value;
+
+  document.getElementById("pStg3Content").innerText = document.getElementById("stg3Content").value;
+  document.getElementById("pStg3Act").innerText = document.getElementById("stg3Act").value;
+
+  document.getElementById("pPostContent").innerText = document.getElementById("postContent").value;
+  document.getElementById("pPostAct").innerText = document.getElementById("postAct").value;
+
+  // Standard Remarks Text Tag Generator
+  const remarkTemplate = `
+    <b>CBA:</b> ${document.getElementById("cbaInstruments").value || "Checklist"}<br>
+    <b>TS:</b> ${document.getElementById("elemTS").value}<br>
+    <b>CCE:</b> ${document.getElementById("elemCCE").value}<br>
+    <b>T&LM:</b> ${document.getElementById("elemTLM").value}
+  `;
+
+  document.getElementById("pPreRemarks").innerHTML = remarkTemplate;
+  document.getElementById("pStg1Remarks").innerHTML = remarkTemplate;
+  document.getElementById("pStg2Remarks").innerHTML = remarkTemplate;
+  document.getElementById("pStg3Remarks").innerHTML = remarkTemplate;
+  document.getElementById("pPostRemarks").innerHTML = remarkTemplate;
 }
