@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MY Primary English RPH Generator (KSSR Semakan)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .card { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .header-bg { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; }
+    .rph-paper { background: white; padding: 30px; border: 1px solid #dee2e6; border-radius: 8px; font-size: 14px; }
+    .rph-table td, .rph-table th { padding: 8px 12px; vertical-align: top; }
+    @media print {
+      body * { visibility: hidden; }
+      #printableArea, #printableArea * { visibility: visible; }
+      #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container py-4">
+  <div class="p-4 mb-4 header-bg rounded-3 text-center no-print">
+    <h2>🇲🇾 Primary School English e-RPH Generator</h2>
+    <p class="mb-0">KSSR Semakan (Year 1 to Year 6) | Class Manager & BCD Objective Generator</p>
+  </div>
+
+  <ul class="nav nav-pills mb-4 no-print justify-content-center" id="mainTab" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active" id="classes-tab" data-bs-toggle="pill" data-bs-target="#classesTab" type="button">1. Class Manager</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" id="generator-tab" data-bs-toggle="pill" data-bs-target="#generatorTab" type="button">2. Generate Lesson Plan</button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="mainTabContent">
+    
+    <!-- TAB 1: CLASS MANAGER -->
+    <div class="tab-pane fade show active" id="classesTab" role="tabpanel">
+      <div class="row">
+        <div class="col-md-5">
+          <div class="card p-3 mb-3">
+            <h5 id="classFormTitle">Add New Class</h5>
+            <form id="classForm">
+              <input type="hidden" id="classId">
+              <div class="mb-3">
+                <label class="form-label">Class Name (e.g., 3 Arif)</label>
+                <input type="text" class="form-control" id="classNameInput" placeholder="e.g. 3 Arif" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Year Level</label>
+                <select class="form-select" id="classYearInput" required>
+                  <option value="1">Year 1</option>
+                  <option value="2">Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4</option>
+                  <option value="5">Year 5</option>
+                  <option value="6">Year 6</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Number of Pupils</label>
+                <input type="number" class="form-control" id="classQuantityInput" placeholder="e.g. 32" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100" id="saveClassBtn">Save Class</button>
+              <button type="button" class="btn btn-secondary w-100 mt-2 d-none" id="cancelEditBtn" onclick="resetClassForm()">Cancel Edit</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-md-7">
+          <div class="card p-3">
+            <h5>Saved Classes</h5>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Class Name</th>
+                    <th>Year Level</th>
+                    <th>Pupils</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="classListTable">
+                  <!-- JS populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: LESSON PLAN GENERATOR -->
+    <div class="tab-pane fade" id="generatorTab" role="tabpanel">
+      <div class="row">
+        <!-- Input Form -->
+        <div class="col-md-6 no-print">
+          <div class="card p-3 mb-4">
+            <h5>Lesson Details</h5>
+            <form id="rphForm">
+              
+              <div class="mb-3">
+                <label class="form-label">Teacher Name</label>
+                <input type="text" class="form-control" id="teacherName" placeholder="e.g. Cikgu Sarah" required>
+              </div>
+
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label">Select Class</label>
+                  <select class="form-select" id="selectSavedClass" onchange="onClassSelect()" required>
+                    <option value="">-- Select Saved Class --</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Date</label>
+                  <input type="date" class="form-control" id="lessonDate" required>
+                </div>
+              </div>
+
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label">Day</label>
+                  <select class="form-select" id="lessonDay">
+                    <option>Monday</option>
+                    <option>Tuesday</option>
+                    <option>Wednesday</option>
+                    <option>Thursday</option>
+                    <option>Friday</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Time & Duration</label>
+                  <input type="text" class="form-control" id="lessonTime" placeholder="e.g. 08:00 - 09:00 AM (60 min)">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Theme / Unit / Topic</label>
+                <input type="text" class="form-control" id="lessonTopic" placeholder="e.g. World of Self, Family and Friends / Unit 1: Welcome!">
+              </div>
+
+              <hr>
+              <h6>Curriculum & Skills Focus</h6>
+
+              <div class="mb-3">
+                <label class="form-label">Main Skill</label>
+                <select class="form-select" id="mainSkillSelect" onchange="updateDSKPOptions()">
+                  <option value="Listening">Listening</option>
+                  <option value="Speaking">Speaking</option>
+                  <option value="Reading">Reading</option>
+                  <option value="Writing">Writing</option>
+                  <option value="Language Arts">Language Arts</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Content Standard (CS)</label>
+                <select class="form-select" id="csSelect"></select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Learning Standard (LS)</label>
+                <select class="form-select" id="lsSelect"></select>
+              </div>
+
+              <hr>
+              <h6>Objectives (BCD Items)</h6>
+              <p class="small text-muted mb-2">The audience header <strong>"By the end of the lesson, [Class Name] pupils should be able to:"</strong> is auto-generated.</p>
+
+              <div class="mb-2">
+                <label class="form-label">Objective 1 (Behavior, Condition, Degree)</label>
+                <input type="text" class="form-control" id="bcd1" placeholder="e.g. listen to the recording and match 4 out of 5 words correctly." required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Objective 2 (Behavior, Condition, Degree - Optional)</label>
+                <input type="text" class="form-control" id="bcd2" placeholder="e.g. read the 4 sentences aloud with correct pronunciation.">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Success Criteria</label>
+                <textarea class="form-control" id="successCriteria" rows="2" placeholder="e.g. Pupils can complete 4 matching items correctly on worksheet 1."></textarea>
+              </div>
+
+              <hr>
+              <h6>Activities & Assessment</h6>
+              <div class="mb-2">
+                <label class="form-label">Set Induksi (Starter)</label>
+                <textarea class="form-control" id="actStarter" rows="2">Teacher shows flashcards and asks pupils background questions.</textarea>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Aktiviti Utama (Main Activities)</label>
+                <textarea class="form-control" id="actMain" rows="3">1. Pupils listen to the audio track.
+2. Pupils work in pairs to discuss the answers.
+3. Teacher guides pupils to complete task sheets.</textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Penutup (Plenary)</label>
+                <textarea class="form-control" id="actPlenary" rows="2">Teacher summarizes lesson points and assigns exit tickets.</textarea>
+              </div>
+
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label">EMK</label>
+                  <input type="text" class="form-control" id="emkInput" value="Language / Moral Values">
+                </div>
+                <div class="col-6">
+                  <label class="form-label">BBB (Teaching Aids)</label>
+                  <input type="text" class="form-control" id="bbbInput" value="Textbook, Audio Clip, Worksheet">
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-success w-100" onclick="generateRPH()">Generate Preview</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Output Preview -->
+        <div class="col-md-6">
+          <div class="d-flex justify-content-between mb-3 no-print">
+            <h5>Lesson Plan Preview</h5>
+            <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print / Save PDF</button>
+          </div>
+
+          <div id="printableArea" class="rph-paper">
+            <h4 class="text-center mb-3 text-uppercase">RANCANGAN PENGAJARAN HARIAN (RPH)</h4>
+            <table class="table table-bordered rph-table">
+              <tr>
+                <td width="25%"><strong>Subject</strong></td>
+                <td width="25%">English Language</td>
+                <td width="25%"><strong>Class</strong></td>
+                <td width="25%"><span id="previewClass">-</span></td>
+              </tr>
+              <tr>
+                <td><strong>Teacher</strong></td>
+                <td><span id="previewTeacher">-</span></td>
+                <td><strong>Pupils Quantity</strong></td>
+                <td><span id="previewQuantity">-</span></td>
+              </tr>
+              <tr>
+                <td><strong>Date / Day</strong></td>
+                <td><span id="previewDateDay">-</span></td>
+                <td><strong>Time / Duration</strong></td>
+                <td><span id="previewTime">-</span></td>
+              </tr>
+              <tr>
+                <td><strong>Theme / Topic</strong></td>
+                <td colspan="3"><span id="previewTopic">-</span></td>
+              </tr>
+              <tr>
+                <td><strong>Focus Skill</strong></td>
+                <td colspan="3"><span id="previewSkill">-</span></td>
+              </tr>
+              <tr>
+                <td><strong>Content Standard</strong></td>
+                <td colspan="3"><span id="previewCS">-</span></td>
+              </tr>
+              <tr>
+                <td><strong>Learning Standard</strong></td>
+                <td colspan="3"><span id="previewLS">-</span></td>
+              </tr>
+              <tr>
+                <td><strong>Learning Objectives</strong></td>
+                <td colspan="3">
+                  <p class="fw-bold mb-1" id="previewAudienceHeader">By the end of the lesson, [Class Name] pupils should be able to:</p>
+                  <ol class="mb-0 ps-3" id="previewObjectivesList">
+                    <li>---</li>
+                  </ol>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Success Criteria</strong></td>
+                <td colspan="3"><span id="previewCriteria">-</span></td>
+              </tr>
+              <tr>
+                <td><strong>Activities (PdPC)</strong></td>
+                <td colspan="3">
+                  <strong>Set Induksi:</strong> <p id="previewStarter" class="mb-2">-</p>
+                  <strong>Aktiviti Utama:</strong> <p id="previewMain" class="mb-2">-</p>
+                  <strong>Penutup:</strong> <p id="previewPlenary" class="mb-0">-</p>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>EMK & BBB</strong></td>
+                <td colspan="3">
+                  <strong>EMK:</strong> <span id="previewEMK">-</span><br>
+                  <strong>BBB:</strong> <span id="previewBBB">-</span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Reflection</strong></td>
+                <td colspan="3"><span id="previewReflection">___ / ___ pupils achieved the learning objectives. Remedial activity was given to pupils who needed guidance.</span></td>
+              </tr>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
