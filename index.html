@@ -3,448 +3,289 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IPG Primary English RPH Generator (KSSR Semakan)</title>
+  <title>IPG Primary English RPH Generator</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <style>
     :root { --primary-color: #1e3a8a; --secondary-color: #0284c7; }
-    body { background-color: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #334155; }
+    body { background-color: #f1f5f9; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
     .header-bg { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border-radius: 12px; }
     .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
     .form-section-title { color: var(--primary-color); border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-weight: 600; font-size: 1.1rem; }
     
-    /* A4 Printable Document Styles */
-    .rph-paper { background: white; padding: 40px; border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 4px; font-family: 'Times New Roman', Times, serif; font-size: 13px; color: #000; line-height: 1.4; }
-    .rph-paper h3 { font-family: 'Times New Roman', Times, serif; font-weight: bold; font-size: 16px; text-transform: uppercase; }
-    .rph-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-    .rph-table th, .rph-table td { border: 1px solid #000; padding: 6px 8px; vertical-align: top; }
-    .bg-light-gray { background-color: #f8fafc; font-weight: bold; }
-    .remarks-box { font-size: 11px; line-height: 1.3; }
-
-    @media print {
-      body * { visibility: hidden; }
-      #printableArea, #printableArea * { visibility: visible; }
-      #printableArea { position: absolute; left: 0; top: 0; width: 100%; padding: 0; border: none; box-shadow: none; }
-      .no-print { display: none !important; }
-      @page { size: A4 portrait; margin: 12mm; }
+    /* Document Preview - Strict Arial 11pt Styling */
+    #wordExportArea {
+      background: white; padding: 40px; border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-radius: 4px;
+      font-family: Arial, sans-serif; font-size: 11pt; color: #000; line-height: 1.5;
     }
+    #wordExportArea h3 { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; text-transform: uppercase; text-align: center; }
+    .rph-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    .rph-table th, .rph-table td { border: 1px solid #000; padding: 5px; vertical-align: top; }
+    .bold-label { font-weight: bold; }
+    .text-center { text-align: center; }
   </style>
 </head>
 <body>
 
 <div class="container-fluid py-4 px-4">
-  
-  <!-- Header -->
-  <div class="p-4 mb-4 header-bg text-center no-print shadow-sm">
-    <h2 class="fw-bold mb-1"><i class="bi bi-journal-bookmark-fill me-2"></i>Primary English e-RPH Generator</h2>
-    <p class="mb-0 opacity-90">Official IPG / Practicum Standard Daily Lesson Plan Template (KSSR Semakan)</p>
+  <div class="p-4 mb-4 header-bg text-center shadow-sm">
+    <h2 class="fw-bold mb-1"><i class="bi bi-file-word-fill me-2"></i>Primary English RPH to WPS Generator</h2>
+    <p class="mb-0 opacity-90">Strict Arial 11pt formatting. Exports directly to .doc for WPS / MS Word</p>
   </div>
 
-  <!-- Navigation Tabs -->
-  <ul class="nav nav-pills mb-4 no-print justify-content-center" id="mainTab" role="tablist">
-    <li class="nav-item">
-      <button class="nav-link active fw-semibold" id="classes-tab" data-bs-toggle="pill" data-bs-target="#classesTab"><i class="bi bi-people-fill me-1"></i> 1. Class Manager</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link fw-semibold" id="generator-tab" data-bs-toggle="pill" data-bs-target="#generatorTab"><i class="bi bi-file-earmark-text-fill me-1"></i> 2. RPH Builder & Preview</button>
-    </li>
-  </ul>
-
-  <div class="tab-content">
-    
-    <!-- TAB 1: CLASS MANAGER -->
-    <div class="tab-pane fade show active" id="classesTab">
-      <div class="row justify-content-center">
-        <div class="col-md-4">
-          <div class="card p-4 mb-4">
-            <h5 id="classFormTitle" class="form-section-title mb-3">Add New Class Profile</h5>
-            <form id="classForm">
-              <input type="hidden" id="classId">
-              <div class="mb-3">
-                <label class="form-label fw-medium">Class Name (e.g. 3 Arif)</label>
-                <input type="text" class="form-control" id="classNameInput" placeholder="e.g. 3 Arif" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-medium">Year Level</label>
-                <select class="form-select" id="classYearInput" required>
-                  <option value="1">Year 1</option>
-                  <option value="2">Year 2</option>
-                  <option value="3">Year 3</option>
-                  <option value="4">Year 4</option>
-                  <option value="5">Year 5</option>
-                  <option value="6">Year 6</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-medium">Num. of Students</label>
-                <input type="number" class="form-control" id="classQuantityInput" placeholder="e.g. 26" required>
-              </div>
-              <button type="submit" class="btn btn-primary w-100" id="saveClassBtn">Save Class</button>
-              <button type="button" class="btn btn-outline-secondary w-100 mt-2 d-none" id="cancelEditBtn" onclick="resetClassForm()">Cancel Edit</button>
-            </form>
+  <div class="row">
+    <!-- Input Controls -->
+    <div class="col-lg-4">
+      <div class="card p-4 mb-4" style="max-height: 80vh; overflow-y: auto;">
+        <h5 class="form-section-title mb-3">Admin Data & Skills</h5>
+        <form id="rphForm">
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Class Name</label>
+            <input type="text" class="form-control" id="className" value="3 Arif">
           </div>
-        </div>
-
-        <div class="col-md-6">
-          <div class="card p-4">
-            <h5 class="form-section-title mb-3">Saved Classes</h5>
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead class="table-light">
-                  <tr>
-                    <th>Class Name</th>
-                    <th>Year Level</th>
-                    <th>Num. Students</th>
-                    <th class="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="classListTable"></tbody>
-              </table>
-            </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6"><label class="form-label">Year</label><input type="text" class="form-control" id="classYear" value="1"></div>
+            <div class="col-6"><label class="form-label">Students</label><input type="text" class="form-control" id="classQty" value="26"></div>
           </div>
-        </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6"><label class="form-label">Date</label><input type="date" class="form-control" id="lessonDate"></div>
+            <div class="col-6"><label class="form-label">Time</label><input type="text" class="form-control" id="lessonTime" value="8.00 a.m - 9.00 a.m"></div>
+          </div>
+          <div class="mb-2"><input type="text" class="form-control" id="themeTopic" placeholder="Theme & Topic"></div>
+          <div class="mb-2"><input type="text" class="form-control" id="skillFocus" placeholder="Skill / Focus"></div>
+          <div class="mb-4"><input type="text" class="form-control" id="priorKnowledge" placeholder="Prior Knowledge / Skills"></div>
+
+          <h5 class="form-section-title mb-2">Standards (CS & LS)</h5>
+          <label class="form-label fw-medium">Main</label>
+          <input type="text" class="form-control mb-1" id="mainSkill" placeholder="Main Skill (e.g. Listening)">
+          <input type="text" class="form-control mb-1" id="mainCS" placeholder="Main CS">
+          <input type="text" class="form-control mb-3" id="mainLS" placeholder="Main LS">
+          
+          <label class="form-label fw-medium">Complementary</label>
+          <input type="text" class="form-control mb-1" id="compSkill" placeholder="Complementary Skill (e.g. Speaking)">
+          <input type="text" class="form-control mb-1" id="compCS" placeholder="Comp CS">
+          <input type="text" class="form-control mb-4" id="compLS" placeholder="Comp LS">
+
+          <h5 class="form-section-title mb-2">Learning Outcome (LO)</h5>
+          <input type="text" class="form-control mb-1" id="loKnowledge" placeholder="Knowledge (what they need to know)">
+          <input type="text" class="form-control mb-1" id="loSkill" placeholder="Skill (what they need to do)">
+          <input type="text" class="form-control mb-4" id="loValue" placeholder="Value">
+
+          <h5 class="form-section-title mb-2">Objectives & Success Criteria</h5>
+          <textarea class="form-control mb-2" id="objectives" rows="2" placeholder="List objectives..."></textarea>
+          <textarea class="form-control mb-4" id="successCriteria" rows="2" placeholder="1. I can..."></textarea>
+
+          <h5 class="form-section-title mb-2">Elements & Strategies</h5>
+          <div class="row g-2 mb-4">
+            <div class="col-6"><input type="text" class="form-control" id="elemTS" placeholder="TS/HoM/HOTS"></div>
+            <div class="col-6"><input type="text" class="form-control" id="elemCCE" placeholder="CCE"></div>
+            <div class="col-6"><input type="text" class="form-control" id="elemICT" placeholder="ICT"></div>
+            <div class="col-6"><input type="text" class="form-control" id="elemTLM" placeholder="T&LM"></div>
+            <div class="col-6"><input type="text" class="form-control" id="elemAED" placeholder="AEd"></div>
+            <div class="col-6"><input type="text" class="form-control" id="elemSS" placeholder="Soft Skills"></div>
+            <div class="col-6"><input type="text" class="form-control" id="elem21CPP" placeholder="21stCPP"></div>
+            <div class="col-6"><input type="text" class="form-control" id="elemDS" placeholder="Differentiation"></div>
+          </div>
+
+          <button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="generateRPH()">Refresh Document</button>
+        </form>
       </div>
     </div>
 
-    <!-- TAB 2: LESSON PLAN BUILDER -->
-    <div class="tab-pane fade" id="generatorTab">
-      <div class="row">
-        
-        <!-- Input Controls -->
-        <div class="col-lg-5 no-print">
-          <div class="card p-4 mb-4" style="max-height: 85vh; overflow-y: auto;">
-            <h5 class="form-section-title mb-3">RPH Form Inputs</h5>
-            <form id="rphForm">
-              
-              <!-- Administrative Info -->
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Select Class Profile</label>
-                <select class="form-select border-primary" id="selectSavedClass" onchange="onClassSelect()" required>
-                  <option value="">-- Select Saved Class --</option>
-                </select>
-              </div>
+    <!-- Live Document Preview & Export -->
+    <div class="col-lg-8">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0">Document Preview (Arial 11pt)</h5>
+        <button class="btn btn-success px-4 fw-bold" onclick="exportToWord()"><i class="bi bi-file-earmark-word me-2"></i>Export to WPS / Word (.doc)</button>
+      </div>
 
-              <div class="row g-2 mb-3">
-                <div class="col-6">
-                  <label class="form-label">Date</label>
-                  <input type="date" class="form-control" id="lessonDate" required>
-                </div>
-                <div class="col-6">
-                  <label class="form-label">Time</label>
-                  <input type="text" class="form-control" id="lessonTime" value="8.00 a.m - 9.00 a.m">
-                </div>
-              </div>
+      <div id="wordExportArea">
+        <div id="documentContent">
+          <h3>LESSON DETAILS</h3>
+          
+          <!-- Table 1: Header Info -->
+          <table class="rph-table">
+            <tr>
+              <td class="bold-label" width="16.6%">Subject</td>
+              <td width="16.6%">English</td>
+              <td class="bold-label" width="16.6%">Year</td>
+              <td width="16.6%"><span id="pYear">1</span></td>
+              <td class="bold-label" width="16.6%">Num. of Students</td>
+              <td width="16.6%"><span id="pNumStudents">26</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Date</td>
+              <td><span id="pDate">-</span></td>
+              <td class="bold-label">Time</td>
+              <td colspan="3"><span id="pTime">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Theme & Topic</td>
+              <td colspan="5"><span id="pThemeTopic">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Skill / Focus</td>
+              <td colspan="5"><span id="pSkillFocus">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Prior Knowledge / Skills</td>
+              <td colspan="5"><span id="pPriorKnowledge">-</span></td>
+            </tr>
+            <tr>
+              <td colspan="3" class="bold-label text-center">Main Skill (<span id="pMainSkillTitle">-</span>)</td>
+              <td colspan="3" class="bold-label text-center">Complementary Skill (<span id="pCompSkillTitle">-</span>)</td>
+            </tr>
+            <tr>
+              <td class="bold-label">Content Standard (CS)</td>
+              <td colspan="2"><span id="pMainCS">-</span></td>
+              <td colspan="3"><span id="pCompCS">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Learning Standard (LS)</td>
+              <td colspan="2"><span id="pMainLS">-</span></td>
+              <td colspan="3"><span id="pCompLS">-</span></td>
+            </tr>
+          </table>
 
-              <div class="mb-3">
-                <label class="form-label">Theme & Topic</label>
-                <input type="text" class="form-control" id="lessonThemeTopic" placeholder="e.g. World of Self, Family and Friends / Unit 1: Welcome!">
-              </div>
+          <!-- Table 2: 4-Column Learning Outcome -->
+          <table class="rph-table">
+            <tr class="bold-label text-center">
+              <td width="25%">Learning Outcome (LO)</td>
+              <td width="25%">Knowledge<br><span style="font-weight:normal">(what the pupils need to know)</span></td>
+              <td width="25%">Skill<br><span style="font-weight:normal">(what the pupils need to do)</span></td>
+              <td width="25%">Value</td>
+            </tr>
+            <tr>
+              <td></td> <!-- Blank cell under LO due to formatting -->
+              <td><span id="pLoKnowledge">-</span></td>
+              <td><span id="pLoSkill">-</span></td>
+              <td><span id="pLoValue">-</span></td>
+            </tr>
+          </table>
 
-              <div class="mb-3">
-                <label class="form-label">Skill / Focus</label>
-                <input type="text" class="form-control" id="lessonSkillFocus" placeholder="e.g. Listening and Speaking">
-              </div>
+          <!-- Table 3: Objectives & Assessment -->
+          <table class="rph-table">
+            <tr>
+              <td class="bold-label" width="25%">Learning Objectives</td>
+              <td colspan="5">
+                <span id="pObjHeader" class="bold-label">By the end of the lesson, pupils should be able to:</span><br>
+                <span id="pObjList">-</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="bold-label">Success Criteria (SC)</td>
+              <td colspan="5">
+                <span class="bold-label">I can:</span><br>
+                <span id="pScList">-</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="bold-label">Classroom Based Assessment (CBA) (√)</td>
+              <td width="15%">Oral [ √ ]</td>
+              <td width="20%">Observation [ √ ]</td>
+              <td width="15%">Written [ &nbsp; ]</td>
+              <td class="bold-label" width="10%">Instruments</td>
+              <td width="15%">Task Sheet</td>
+            </tr>
+          </table>
 
-              <div class="mb-3">
-                <label class="form-label">Prior Knowledge / Skills</label>
-                <input type="text" class="form-control" id="priorKnowledge" placeholder="e.g. Pupils know vocabulary related to greetings.">
-              </div>
+          <!-- Table 4: Elements & Strategies -->
+          <table class="rph-table">
+            <tr>
+              <td class="bold-label" width="30%">Thinking Skills (TS): Habits of Mind (HoM): Higher-order thinking Skills (HOTS):</td>
+              <td colspan="5"><span id="pTS">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Cross-Curricular Elements (CCE)</td>
+              <td colspan="5"><span id="pCCE">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Information & Communication Technology (ICT)</td>
+              <td colspan="5"><span id="pICT">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Teaching & Learning Materials (T&LM)</td>
+              <td colspan="5"><span id="pTLM">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Arts in Education (AEd) (If applicable)</td>
+              <td colspan="5"><span id="pAED">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label">Soft Skills (SS)</td>
+              <td colspan="5"><span id="pSS">-</span></td>
+            </tr>
+            <tr>
+              <td class="bold-label text-center" colspan="3">Teaching Strategies</td>
+              <td class="bold-label text-center" colspan="3">21st Century Pedagogy Practice (21stCPP)</td>
+            </tr>
+            <tr>
+              <td colspan="3"><span id="pDS">-</span></td>
+              <td colspan="3"><span id="p21CPP">-</span></td>
+            </tr>
+          </table>
 
-              <!-- Skills & DSKP -->
-              <h6 class="form-section-title mt-4 mb-3">Curriculum Standards</h6>
-              
-              <div class="mb-2">
-                <label class="form-label fw-medium">Main Skill</label>
-                <select class="form-select mb-2" id="mainSkillSelect" onchange="updateDSKP()"></select>
-                <input type="text" class="form-control mb-1" id="mainCS" placeholder="Main Content Standard (CS)">
-                <input type="text" class="form-control" id="mainLS" placeholder="Main Learning Standard (LS)">
-              </div>
+          <!-- Table 5: Delivery Steps -->
+          <table class="rph-table">
+            <tr class="bold-label text-center">
+              <td width="15%">Steps & Minutes</td>
+              <td width="25%">Lesson Content</td>
+              <td width="35%">Teaching & Learning Activities</td>
+              <td width="25%">Remarks ( / )</td>
+            </tr>
+            <tr>
+              <td class="bold-label">Pre Lesson<br>(5 Minutes)</td>
+              <td>Greetings</td>
+              <td>Teacher activates prior knowledge.</td>
+              <td>CBA:<br>TS/HoM/HOTS:<br>CCE:<br>T&LM:</td>
+            </tr>
+            <tr>
+              <td class="bold-label">Lesson Development Stage I<br>(15 Minutes)</td>
+              <td>Presentation</td>
+              <td>Pupils listen to input.</td>
+              <td>CBA:<br>TS/HoM/HOTS:<br>CCE:<br>T&LM:</td>
+            </tr>
+            <tr>
+              <td class="bold-label">Stage II<br>(20 Minutes)</td>
+              <td>Practice</td>
+              <td>Pupils complete task in pairs.</td>
+              <td>CBA:<br>TS/HoM/HOTS:<br>CCE:<br>T&LM:</td>
+            </tr>
+            <tr>
+              <td class="bold-label">Stage III<br>(15 Minutes)</td>
+              <td>Production</td>
+              <td>Pupils present their work.</td>
+              <td>CBA:<br>TS/HoM/HOTS:<br>CCE:<br>T&LM:</td>
+            </tr>
+            <tr>
+              <td class="bold-label">Post Lesson<br>(5 Minutes)</td>
+              <td>Closure</td>
+              <td>Teacher recaps lesson.</td>
+              <td>CBA:<br>Value:</td>
+            </tr>
+          </table>
 
-              <div class="mb-3">
-                <label class="form-label fw-medium">Complementary Skill</label>
-                <select class="form-select mb-2" id="compSkillSelect" onchange="updateDSKP()"></select>
-                <input type="text" class="form-control mb-1" id="compCS" placeholder="Comp. Content Standard (CS)">
-                <input type="text" class="form-control" id="compLS" placeholder="Comp. Learning Standard (LS)">
-              </div>
+          <!-- Table 6: Reflections -->
+          <table class="rph-table">
+            <tr class="bold-label"><td colspan="2">Teacher’s Reflection</td></tr>
+            <tr>
+              <td width="50%">Strength:<br><br>Weakness:</td>
+              <td width="50%">Suggestion:<br></td>
+            </tr>
+            <tr class="bold-label">
+              <td>Mentor Teacher</td>
+              <td>Lecturer</td>
+            </tr>
+            <tr>
+              <td>Strength:<br><br>Weakness:<br><br>Suggestion:</td>
+              <td>Strength:<br><br>Weakness:<br><br>Suggestion:</td>
+            </tr>
+          </table>
 
-              <!-- Learning Outcomes -->
-              <h6 class="form-section-title mt-4 mb-3">Learning Outcomes (LO)</h6>
-              <div class="mb-2">
-                <label class="form-label">Knowledge (what pupils need to know)</label>
-                <input type="text" class="form-control" id="loKnowledge" placeholder="e.g. Target vocabulary of sports">
-              </div>
-              <div class="mb-2">
-                <label class="form-label">Skill (what pupils need to do)</label>
-                <input type="text" class="form-control" id="loSkill" placeholder="e.g. Listen and match picture cards">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Value</label>
-                <input type="text" class="form-control" id="loValue" placeholder="e.g. Cooperation, Kindness">
-              </div>
-
-              <!-- Objectives & Criteria -->
-              <h6 class="form-section-title mt-4 mb-3">Objectives & Criteria</h6>
-              <div class="mb-2">
-                <label class="form-label">Objective 1 (BCD)</label>
-                <input type="text" class="form-control" id="bcd1" placeholder="e.g. listen to the recording and match 4 out of 5 items correctly." required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Objective 2 (BCD - Optional)</label>
-                <input type="text" class="form-control" id="bcd2" placeholder="e.g. speak clearly using the sentence pattern.">
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Success Criteria (I can...)</label>
-                <input type="text" class="form-control mb-1" id="sc1" value="1. Listen and point to 4 correct picture cards.">
-                <input type="text" class="form-control mb-1" id="sc2" value="2. Say 3 target sentences accurately.">
-                <input type="text" class="form-control mb-1" id="sc3" placeholder="3. (Optional)">
-                <input type="text" class="form-control" id="sc4" placeholder="4. (Optional)">
-              </div>
-
-              <!-- CBA / PBD Assessment -->
-              <h6 class="form-section-title mt-4 mb-3">Classroom Based Assessment (CBA)</h6>
-              <div class="d-flex gap-3 mb-2">
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="cbaOral" checked><label class="form-check-label">Oral</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="cbaObs" checked><label class="form-check-label">Observation</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="cbaWritten"><label class="form-check-label">Written</label></div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">CBA Instruments</label>
-                <input type="text" class="form-control" id="cbaInstruments" value="Task sheet, Checklist">
-              </div>
-
-              <!-- Educational Elements -->
-              <h6 class="form-section-title mt-4 mb-3">Pedagogy & Elements</h6>
-              <div class="row g-2 mb-2">
-                <div class="col-6"><input type="text" class="form-control" id="elemTS" value="Analysing" placeholder="TS/HOTS"></div>
-                <div class="col-6"><input type="text" class="form-control" id="elemCCE" value="Language" placeholder="CCE"></div>
-                <div class="col-6"><input type="text" class="form-control" id="elemICT" value="Audio speaker, Laptop" placeholder="ICT"></div>
-                <div class="col-6"><input type="text" class="form-control" id="elemTLM" value="Flashcards, Textbook" placeholder="T&LM"></div>
-                <div class="col-6"><input type="text" class="form-control" id="elemAED" value="Visual Arts" placeholder="AEd"></div>
-                <div class="col-6"><input type="text" class="form-control" id="elemSS" value="Teamwork" placeholder="Soft Skills"></div>
-                <div class="col-6"><input type="text" class="form-control" id="elem21CPP" value="Collaborative" placeholder="21stCPP"></div>
-                <div class="col-6"><input type="text" class="form-control" id="elemDS" value="Outcome / Task" placeholder="DS"></div>
-              </div>
-
-              <!-- Delivery Stages -->
-              <h6 class="form-section-title mt-4 mb-3">Delivery Steps</h6>
-              
-              <div class="mb-2">
-                <label class="form-label fw-bold">Pre Lesson (5 Mins)</label>
-                <textarea class="form-control mb-1" id="preContent" rows="1" placeholder="Content">Greetings & Hook</textarea>
-                <textarea class="form-control" id="preAct" rows="2" placeholder="T&L Activities">Teacher shows flashcards and asks pupils questions to activate prior knowledge.</textarea>
-              </div>
-
-              <div class="mb-2">
-                <label class="form-label fw-bold">Lesson Development Stage I (15 Mins)</label>
-                <textarea class="form-control mb-1" id="stg1Content" rows="1" placeholder="Content">Input & Demonstration</textarea>
-                <textarea class="form-control" id="stg1Act" rows="2" placeholder="T&L Activities">1. Teacher plays the audio recording. 2. Pupils listen and repeat after the teacher.</textarea>
-              </div>
-
-              <div class="mb-2">
-                <label class="form-label fw-bold">Stage II (20 Mins)</label>
-                <textarea class="form-control mb-1" id="stg2Content" rows="1" placeholder="Content">Guided Practice</textarea>
-                <textarea class="form-control" id="stg2Act" rows="2" placeholder="T&L Activities">1. Pupils work in pairs to practice the dialog. 2. Teacher monitors and offers guidance.</textarea>
-              </div>
-
-              <div class="mb-2">
-                <label class="form-label fw-bold">Stage III (15 Mins)</label>
-                <textarea class="form-control mb-1" id="stg3Content" rows="1" placeholder="Content">Independent Practice</textarea>
-                <textarea class="form-control" id="stg3Act" rows="2" placeholder="T&L Activities">Pupils complete the task sheet individually to demonstrate understanding.</textarea>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label fw-bold">Post Lesson (5 Mins)</label>
-                <textarea class="form-control mb-1" id="postContent" rows="1" placeholder="Content">Closure</textarea>
-                <textarea class="form-control" id="postAct" rows="2" placeholder="T&L Activities">Teacher recaps lesson objectives and gathers exit tickets.</textarea>
-              </div>
-
-              <button type="button" class="btn btn-success w-100 py-2 fw-bold" onclick="generateRPH()"><i class="bi bi-arrow-repeat me-1"></i> Update Live Preview</button>
-            </form>
-          </div>
         </div>
-
-        <!-- Live Document Preview -->
-        <div class="col-lg-7">
-          <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-            <h5 class="fw-bold m-0"><i class="bi bi-eye-fill me-2"></i>Live Document Preview</h5>
-            <button class="btn btn-primary px-4 fw-bold" onclick="window.print()"><i class="bi bi-printer-fill me-2"></i>Print / Export PDF</button>
-          </div>
-
-          <div id="printableArea" class="rph-paper">
-            <h3 class="text-center mb-3">DAILY LESSON PLAN (RPH)</h3>
-            
-            <!-- Table 1: Header Info -->
-            <table class="rph-table">
-              <tr>
-                <td width="15%" class="bg-light-gray">Subject</td>
-                <td width="35%">English Language</td>
-                <td width="15%" class="bg-light-gray">Year</td>
-                <td width="10%"><span id="pYear">1</span></td>
-                <td width="15%" class="bg-light-gray">Num. Students</td>
-                <td width="10%"><span id="pNumStudents">26</span></td>
-              </tr>
-              <tr>
-                <td class="bg-light-gray">Date</td>
-                <td><span id="pDate">-</span></td>
-                <td class="bg-light-gray">Time</td>
-                <td colspan="3"><span id="pTime">8.00 a.m - 9.00 a.m</span></td>
-              </tr>
-              <tr>
-                <td class="bg-light-gray">Theme & Topic</td>
-                <td colspan="5"><span id="pThemeTopic">-</span></td>
-              </tr>
-              <tr>
-                <td class="bg-light-gray">Skill / Focus</td>
-                <td colspan="5"><span id="pSkillFocus">-</span></td>
-              </tr>
-              <tr>
-                <td class="bg-light-gray">Prior Knowledge</td>
-                <td colspan="5"><span id="pPriorKnowledge">-</span></td>
-              </tr>
-            </table>
-
-            <!-- Table 2: CS & LS -->
-            <table class="rph-table">
-              <tr class="bg-light-gray text-center">
-                <td width="50%">Main Skill: <span id="pMainSkillTitle">Listening</span></td>
-                <td width="50%">Complementary Skill: <span id="pCompSkillTitle">Speaking</span></td>
-              </tr>
-              <tr>
-                <td><strong>CS:</strong> <span id="pMainCS">-</span></td>
-                <td><strong>CS:</strong> <span id="pCompCS">-</span></td>
-              </tr>
-              <tr>
-                <td><strong>LS:</strong> <span id="pMainLS">-</span></td>
-                <td><strong>LS:</strong> <span id="pCompLS">-</span></td>
-              </tr>
-            </table>
-
-            <!-- Table 3: LO -->
-            <table class="rph-table">
-              <tr class="bg-light-gray">
-                <td width="100%" colspan="3">Learning Outcome (LO)</td>
-              </tr>
-              <tr class="bg-light-gray text-center" style="font-size: 11px;">
-                <td width="35%">Knowledge (what pupils need to know)</td>
-                <td width="45%">Skill (what pupils need to do)</td>
-                <td width="20%">Value</td>
-              </tr>
-              <tr>
-                <td><span id="pLoKnowledge">-</span></td>
-                <td><span id="pLoSkill">-</span></td>
-                <td><span id="pLoValue">-</span></td>
-              </tr>
-            </table>
-
-            <!-- Table 4: Objectives & Success Criteria -->
-            <table class="rph-table">
-              <tr>
-                <td class="bg-light-gray" width="20%">Learning Objectives</td>
-                <td>
-                  <div class="fw-bold mb-1" id="pObjHeader">By the end of the lesson, 3 Arif pupils should be able to:</div>
-                  <ol class="mb-0 ps-3" id="pObjList"><li>---</li></ol>
-                </td>
-              </tr>
-              <tr>
-                <td class="bg-light-gray">Success Criteria (SC)</td>
-                <td>
-                  <div class="fw-bold">I can:</div>
-                  <div id="pScList" class="ps-2">---</div>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Table 5: CBA -->
-            <table class="rph-table">
-              <tr>
-                <td class="bg-light-gray" width="25%">Classroom Based Assessment (CBA)</td>
-                <td width="25%">Oral [<span id="pCbaOral">√</span>] &nbsp; Observation [<span id="pCbaObs">√</span>] &nbsp; Written [<span id="pCbaWritten"></span>]</td>
-                <td class="bg-light-gray" width="15%">Instruments</td>
-                <td width="35%"><span id="pCbaInst">-</span></td>
-              </tr>
-            </table>
-
-            <!-- Table 6: Pedagogy Elements -->
-            <table class="rph-table" style="font-size: 11px;">
-              <tr>
-                <td width="25%"><strong>TS/HOTS:</strong> <span id="pTS">-</span></td>
-                <td width="25%"><strong>CCE:</strong> <span id="pCCE">-</span></td>
-                <td width="25%"><strong>ICT:</strong> <span id="pICT">-</span></td>
-                <td width="25%"><strong>T&LM:</strong> <span id="pTLM">-</span></td>
-              </tr>
-              <tr>
-                <td><strong>AEd:</strong> <span id="pAED">-</span></td>
-                <td><strong>Soft Skills:</strong> <span id="pSS">-</span></td>
-                <td><strong>21stCPP:</strong> <span id="p21CPP">-</span></td>
-                <td><strong>Diff. Strategy:</strong> <span id="pDS">-</span></td>
-              </tr>
-            </table>
-
-            <!-- Table 7: Delivery Table -->
-            <table class="rph-table">
-              <thead>
-                <tr class="bg-light-gray text-center">
-                  <th width="18%">Steps & Minutes</th>
-                  <th width="25%">Lesson Content</th>
-                  <th width="37%">Teaching & Learning Activities</th>
-                  <th width="20%">Remarks</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="fw-bold">Pre Lesson<br>(5 Minutes)</td>
-                  <td><span id="pPreContent">-</span></td>
-                  <td><span id="pPreAct">-</span></td>
-                  <td class="remarks-box" id="pPreRemarks"></td>
-                </tr>
-                <tr>
-                  <td class="fw-bold">Stage I<br>(15 Minutes)</td>
-                  <td><span id="pStg1Content">-</span></td>
-                  <td><span id="pStg1Act">-</span></td>
-                  <td class="remarks-box" id="pStg1Remarks"></td>
-                </tr>
-                <tr>
-                  <td class="fw-bold">Stage II<br>(20 Minutes)</td>
-                  <td><span id="pStg2Content">-</span></td>
-                  <td><span id="pStg2Act">-</span></td>
-                  <td class="remarks-box" id="pStg2Remarks"></td>
-                </tr>
-                <tr>
-                  <td class="fw-bold">Stage III<br>(15 Minutes)</td>
-                  <td><span id="pStg3Content">-</span></td>
-                  <td><span id="pStg3Act">-</span></td>
-                  <td class="remarks-box" id="pStg3Remarks"></td>
-                </tr>
-                <tr>
-                  <td class="fw-bold">Post Lesson<br>(5 Minutes)</td>
-                  <td><span id="pPostContent">-</span></td>
-                  <td><span id="pPostAct">-</span></td>
-                  <td class="remarks-box" id="pPostRemarks"></td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Table 8: Reflections -->
-            <table class="rph-table">
-              <tr class="bg-light-gray"><td colspan="2">Teacher's Reflection</td></tr>
-              <tr>
-                <td width="50%"><strong>Strength:</strong> <br><br><strong>Weakness:</strong> </td>
-                <td width="50%"><strong>Suggestion:</strong> </td>
-              </tr>
-              <tr class="bg-light-gray"><td colspan="2">Mentor Teacher / Lecturer Feedback</td></tr>
-              <tr>
-                <td><strong>Mentor:</strong> </td>
-                <td><strong>Lecturer:</strong> </td>
-              </tr>
-            </table>
-
-          </div>
-        </div>
-
       </div>
     </div>
-
   </div>
 </div>
 
